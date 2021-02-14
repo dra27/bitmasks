@@ -12,14 +12,14 @@ jobs:
           - ubuntu-latest
           - windows-latest
         ocaml-version:
-#          - 4.02.3
-#          - 4.03.0
-#          - 4.04.2
-#          - 4.05.0
-#          - 4.06.1
-#          - 4.07.1
-#          - 4.08.1
-#          - 4.09.1
+          - 4.02.3
+          - 4.03.0
+          - 4.04.2
+          - 4.05.0
+          - 4.06.1
+          - 4.07.1
+          - 4.08.1
+          - 4.09.1
           - 4.10.2
           - 4.11.1
         include:
@@ -33,6 +33,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
       - name: Generate date-based cache key (Unix)
         run: |
           # Put year and week number in cache-key
@@ -46,15 +49,18 @@ jobs:
           Get-Date -UFormat '%Y-%W' | Out-File -FilePath .\cache-key
         if: matrix.os == 'windows-latest'
 
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Cygwin Cache
+        uses: actions/cache@v2
+        with:
+          path: D:\cygwin-cache
+          key: cygwin-5-${{ hashFiles('cache-key') }}
+        if: matrix.os == 'windows-latest'
 
       - name: Cache
-        id: cache
         uses: actions/cache@v2
         with:
           path: ${{ matrix.cache }}
-          key: bitmasks-4-${{ matrix.os }}-${{ matrix.ocaml-version}}-${{ hashFiles('cache-key') }}
+          key: bitmasks-19-${{ matrix.os }}-${{ matrix.ocaml-version}}-${{ hashFiles('cache-key', 'bitmasks.opam') }}
 
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
         uses: dra27/setup-ocaml@caches
@@ -65,21 +71,3 @@ jobs:
       - run: opam install . --deps-only --with-doc --with-test
       - run: opam exec -- dune build @install @runtest
       - run: opam exec -- make doc
-      - name: debug
-        shell: cmd
-        run: |
-          dir /a
-
-#      - name: debug
-#        shell: cmd
-#        run: |
-#          dir d:\cygwin\home\runneradmin\.opam\ocaml-variants.${{ matrix.ocaml-version }}+mingw64c\.opam-switch\sources\ocamlbuild.0.14.0\examples\07-dependent-projects
-#          md a
-#          mklink /d b a
-#          mklink /j c a
-#          dir
-#          dir d:\cygwin\home\runneradmin\.opam /s | findstr "<SYM <JUN"
-#        if: matrix.os == 'windows-latest'
-#
-#      - run: opam exec -- ls -l /home/runneradmin/.opam/ocaml-variants.${{ matrix.ocaml-version }}+mingw64c/.opam-switch/sources/ocamlbuild.0.14.0/examples/07-dependent-projects/
-#        if: matrix.os == 'windows-latest'
