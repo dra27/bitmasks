@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-latest
           - ubuntu-latest
         ocaml-version:
 #          - 4.02.3
@@ -59,7 +60,7 @@ jobs:
           key: ${{ runner.os }}-${{ matrix.ocaml-version}}-${{ steps.key.outputs.week }}3-${{ hashFiles('bitmasks.opam') }}
 
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
-        uses: dra27/setup-ocaml@caching
+        uses: dra27/setup-ocaml@faster-ubuntu
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
