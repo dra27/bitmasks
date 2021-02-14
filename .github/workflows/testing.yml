@@ -8,27 +8,56 @@ jobs:
       fail-fast: false
       matrix:
         os:
+          - macos-latest
+          - ubuntu-latest
           - windows-latest
         ocaml-version:
-          - 4.02.3
-          - 4.03.0
-          - 4.04.2
-          - 4.05.0
-          - 4.06.1
-          - 4.07.1
-          - 4.08.1
-          - 4.09.1
+#          - 4.02.3
+#          - 4.03.0
+#          - 4.04.2
+#          - 4.05.0
+#          - 4.06.1
+#          - 4.07.1
+#          - 4.08.1
+#          - 4.09.1
           - 4.10.2
           - 4.11.1
+        include:
+          - os: windows-latest
+            cache: D:\ocaml-cache
+          - os: macos-latest
+            cache: ~/.opam
+          - os: ubuntu-latest
+            cache: ~/.opam
 
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Generate date-based cache key (Unix)
+        run: |
+          # Put year and week number in cache-key
+          date '+%Y-%W' > ./cache-key
+        if: matrix.os != 'windows-latest'
+
+      - name: Generate date-based cache key (Windows)
+        run: |
+          # Put year and week number in cache-key
+          Write-Output '${{ matrix.cache }} - ${{ matrix.os }} - ${{ matrix.ocaml-version }}'
+          Get-Date -UFormat '%Y-%W' | Out-File -FilePath .\cache-key
+        if: matrix.os == 'windows-latest'
+
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Cache
+        id: cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ matrix.cache }}
+          key: bitmasks-4-${{ matrix.os }}-${{ matrix.ocaml-version}}-${{ hashFiles('cache-key') }}
+
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
-        uses: dra27/setup-ocaml@ssd-cygwin
+        uses: dra27/setup-ocaml@caches
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
@@ -36,3 +65,21 @@ jobs:
       - run: opam install . --deps-only --with-doc --with-test
       - run: opam exec -- dune build @install @runtest
       - run: opam exec -- make doc
+      - name: debug
+        shell: cmd
+        run: |
+          dir /a
+
+#      - name: debug
+#        shell: cmd
+#        run: |
+#          dir d:\cygwin\home\runneradmin\.opam\ocaml-variants.${{ matrix.ocaml-version }}+mingw64c\.opam-switch\sources\ocamlbuild.0.14.0\examples\07-dependent-projects
+#          md a
+#          mklink /d b a
+#          mklink /j c a
+#          dir
+#          dir d:\cygwin\home\runneradmin\.opam /s | findstr "<SYM <JUN"
+#        if: matrix.os == 'windows-latest'
+#
+#      - run: opam exec -- ls -l /home/runneradmin/.opam/ocaml-variants.${{ matrix.ocaml-version }}+mingw64c/.opam-switch/sources/ocamlbuild.0.14.0/examples/07-dependent-projects/
+#        if: matrix.os == 'windows-latest'
