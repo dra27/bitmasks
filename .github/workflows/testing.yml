@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
-        uses: avsm/setup-ocaml@v1
+        uses: dra27/setup-ocaml@ssd-cygwin
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
