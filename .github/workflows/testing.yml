@@ -13,9 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
           - ubuntu-latest
-          - windows-latest
         ocaml-version:
 #          - 4.02.3
 #          - 4.03.0
