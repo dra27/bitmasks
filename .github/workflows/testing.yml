@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-latest
+#          - macos-latest
           - ubuntu-latest
           - windows-latest
         ocaml-version:
@@ -25,8 +25,8 @@ jobs:
         include:
           - os: windows-latest
             cache: D:\ocaml-cache
-          - os: macos-latest
-            cache: ~/.opam
+#          - os: macos-latest
+#            cache: ~/.opam
           - os: ubuntu-latest
             cache: ~/.opam
 
