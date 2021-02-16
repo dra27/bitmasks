@@ -12,15 +12,15 @@ jobs:
           - ubuntu-latest
           - windows-latest
         ocaml-version:
-          - 4.02.3
-          - 4.03.0
-          - 4.04.2
-          - 4.05.0
-          - 4.06.1
-          - 4.07.1
-          - 4.08.1
-          - 4.09.1
-          - 4.10.2
+#          - 4.02.3
+#          - 4.03.0
+#          - 4.04.2
+#          - 4.05.0
+#          - 4.06.1
+#          - 4.07.1
+#          - 4.08.1
+#          - 4.09.1
+#          - 4.10.2
           - 4.11.1
         include:
           - os: windows-latest
@@ -49,6 +49,13 @@ jobs:
           Get-Date -UFormat '%Y-%W' | Out-File -FilePath .\cache-key
         if: matrix.os == 'windows-latest'
 
+      - name: Amazing Cache
+        uses: actions/cache@v2
+        with:
+          path: D:\amazing-cache
+          key: amazing-cache-${{ hashFiles('cache-key') }}
+        if: matrix.os == 'windows-latest'
+
       - name: Cygwin Cache
         uses: actions/cache@v2
         with:
@@ -61,6 +68,11 @@ jobs:
         with:
           path: ${{ matrix.cache }}
           key: bitmasks-19-${{ matrix.os }}-${{ matrix.ocaml-version}}-${{ hashFiles('cache-key', 'bitmasks.opam') }}
+
+      - name: Status
+        shell: cmd
+        run: dir D:\
+        if: matrix.os == 'windows-latest'
 
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
         uses: dra27/setup-ocaml@caches
