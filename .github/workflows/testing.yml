@@ -1,6 +1,11 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  # Prime the caches every Monday
+  schedule:
+    - cron: '14 3 * * MON'
 
 jobs:
   build:
@@ -8,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os:
-#          - macos-latest
+          - macos-latest
           - ubuntu-latest
           - windows-latest
         ocaml-version:
@@ -22,13 +27,6 @@ jobs:
 #          - 4.09.1
 #          - 4.10.2
           - 4.11.1
-        include:
-          - os: windows-latest
-            cache: D:\ocaml-cache
-#          - os: macos-latest
-#            cache: ~/.opam
-          - os: ubuntu-latest
-            cache: ~/.opam
 
     runs-on: ${{ matrix.os }}
 
@@ -36,46 +34,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Generate date-based cache key (Unix)
+      - name: Generate date-based cache key
+        id: key
         run: |
-          # Put year and week number in cache-key
-          date '+%Y-%W' > ./cache-key
-        if: matrix.os != 'windows-latest'
+          # Put year and week number in steps.key.outputs.week
+          # This command "works" for both PowerShell and POSIX shell
+          echo ":$(Write-Output ':')set-output name=week::$(Get-Date -UFormat '%Y-%W')"
+          echo ":`echo :`set-output name=week::`date -u '+%Y-%W'` "
 
-      - name: Generate date-based cache key (Windows)
-        run: |
-          # Put year and week number in cache-key
-          Write-Output '${{ matrix.cache }} - ${{ matrix.os }} - ${{ matrix.ocaml-version }}'
-          Get-Date -UFormat '%Y-%W' | Out-File -FilePath .\cache-key
-        if: matrix.os == 'windows-latest'
-
-      - name: Amazing Cache
+      - name: opam Cache
         uses: actions/cache@v2
         with:
-          path: D:\amazing-cache
-          key: amazing-cache-${{ hashFiles('cache-key') }}
-        if: matrix.os == 'windows-latest'
+          path: .github/caches/opam
+          key: ${{ runner.os }}-opam-1-${{ steps.key.outputs.week }}
 
-      - name: Cygwin Cache
+      - name: build Cache
         uses: actions/cache@v2
         with:
-          path: D:\cygwin-cache
-          key: cygwin-5-${{ hashFiles('cache-key') }}
-        if: matrix.os == 'windows-latest'
-
-      - name: Cache
-        uses: actions/cache@v2
-        with:
-          path: ${{ matrix.cache }}
-          key: bitmasks-19-${{ matrix.os }}-${{ matrix.ocaml-version}}-${{ hashFiles('cache-key', 'bitmasks.opam') }}
-
-      - name: Status
-        shell: cmd
-        run: dir D:\
-        if: matrix.os == 'windows-latest'
+          path: .github/caches/build
+          key: ${{ runner.os }}-build-2-${{ matrix.ocaml-version}}-${{ hashFiles('bitmasks.opam') }}
 
       - name: Set-up OCaml ${{ matrix.ocaml-version }}
-        uses: dra27/setup-ocaml@caches
+        uses: dra27/setup-ocaml@caching
         with:
           ocaml-version: ${{ matrix.ocaml-version }}
 
